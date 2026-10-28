@@ -76,6 +76,7 @@ body{background:#fff}.top,.wrap>.card:first-child,.pvh,.note{display:none}
 <h2>Fields / areas of interest</h2>
 <div id="ints"></div>
 <div class="btns"><button class="pri" id="print">Generate &amp; print / save PDF</button><button class="sec" id="shuffle">Shuffle remarks</button><button class="sec" id="reset">Clear form</button></div>
+<label for="stage">Mentoring completed up to</label><select id="stage"><option value="3">CA1 done (CA2 about to start)</option><option value="4">CA2 &amp; PCA1 done</option><option value="5">MOOCS/MAR discussed</option><option value="6">CA3 done</option><option value="7">CA4 &amp; PCA2 done</option><option value="8">All completed</option></select>
 <label style="font-weight:400"><input type="checkbox" id="rem" checked style="width:auto"> Auto-fill mentor remarks on page 2</label>
 <div class="note">In the print dialog choose “Save as PDF”, landscape, and turn on background graphics for best colours. Your entries stay on this device only.</div>
 </div>
@@ -104,7 +105,7 @@ F.forEach(([id,l,t])=>{
  fe.appendChild(d);
 });
 for(let i=1;i<=3;i++){const d=document.createElement('div');d.innerHTML=`<label for="int${i}">Interest ${i}${i===1?' *':''}</label><input id="int${i}">`;$('ints').appendChild(d);}
-const ids=[...F.map(f=>f[0]),'int1','int2','int3','year','term','sem','mentor'];
+const ids=[...F.map(f=>f[0]),'int1','int2','int3','year','term','sem','mentor','stage'];
 ids.forEach(i=>{const el=$(i);if(S[i]!==undefined)el.value=S[i];el.addEventListener('input',()=>{S[i]=el.value;save();render()});el.addEventListener('change',()=>{S[i]=el.value;save();render()})});
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const v=i=>esc(($(i).value||'').trim());
@@ -151,7 +152,7 @@ function render(){
 <tr><td class="l"></td><td class="l">Name of the Student</td><td><b>${v('name')}</b></td>${blank(3)}</tr>
 <tr><td class="l"></td><td class="l">University Roll</td><td>${v('roll')}</td>${blank(3)}</tr>
 <tr><td class="l" style="text-align:center">Date</td><td class="l">Activities</td>${blank(4)}</tr>`;
- const RM=($('rem').checked&&$('name').value.trim())?remarks():[];
+ const RM=($('rem').checked&&$('name').value.trim())?remarks().slice(0,+$('stage').value):[];
  acts.forEach((a,i)=>{p2+=`<tr><td></td><td class="ac" style="height:42px">${a}</td><td class="rm">${esc(RM[i]||'')}</td></tr>`});
  p2+=`</table>${sig}</div>`;
  $('out').innerHTML=p1+p2;

@@ -43,6 +43,7 @@ button{padding:10px 16px;border-radius:8px;border:1px solid var(--navy);font:inh
 .sheet .l{background:#e9ecf6;font-weight:bold;color:#1f2a5c}
 .sheet .lt{background:#e9ecf6}
 .sheet .ac{background:#f6f7fb;font-weight:bold}
+.rm{font-size:10.5px;line-height:1.3}
 .sig{display:flex;justify-content:space-between;margin-top:22px;font-weight:bold;font-size:13px}
 .sig span u{display:inline-block;min-width:190px;border-bottom:1px solid #000;text-decoration:none}
 .foot{text-align:center;font-size:10px;font-style:italic;color:#777;margin-top:10px}
@@ -74,7 +75,8 @@ body{background:#fff}.top,.wrap>.card:first-child,.pvh,.note{display:none}
 <div id="fields"></div>
 <h2>Fields / areas of interest</h2>
 <div id="ints"></div>
-<div class="btns"><button class="pri" id="print">Generate &amp; print / save PDF</button><button class="sec" id="reset">Clear form</button></div>
+<div class="btns"><button class="pri" id="print">Generate &amp; print / save PDF</button><button class="sec" id="shuffle">Shuffle remarks</button><button class="sec" id="reset">Clear form</button></div>
+<label style="font-weight:400"><input type="checkbox" id="rem" checked style="width:auto"> Auto-fill mentor remarks on page 2</label>
 <div class="note">In the print dialog choose “Save as PDF”, landscape, and turn on background graphics for best colours. Your entries stay on this device only.</div>
 </div>
 <div class="card pv">
@@ -106,6 +108,30 @@ const ids=[...F.map(f=>f[0]),'int1','int2','int3','year','term','sem','mentor'];
 ids.forEach(i=>{const el=$(i);if(S[i]!==undefined)el.value=S[i];el.addEventListener('input',()=>{S[i]=el.value;save();render()});el.addEventListener('change',()=>{S[i]=el.value;save();render()})});
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const v=i=>esc(($(i).value||'').trim());
+let seed=0;
+const hash=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function remarks(){
+ const n=$('name').value.trim().split(/\s+/)[0];
+ const a=parseFloat($('p10').value),b=parseFloat($('p12').value);
+ const avg=(isNaN(a)||isNaN(b))?NaN:(a+b)/2;
+ const t=isNaN(avg)?1:avg>=85?2:avg>=70?1:0;
+ const it=$('int1').value.trim()||'core subjects',it2=$('int2').value.trim()||it;
+ const R=rng(hash(($('roll').value+$('name').value).toLowerCase())+seed*7919);
+ const pick=x=>x[Math.floor(R()*x.length)];
+ const res=[
+ ['Results need improvement; advised to attend remedial classes and clear doubts regularly.',`${n} needs focused effort in weak subjects; weekly follow-up with the mentor planned.`,'Below expectation; advised to improve attendance and revise basics daily.'],
+ ['Satisfactory results; can improve with regular revision and timely assignment submission.',`Steady performance; ${n} advised to strengthen weaker subjects and practise previous questions.`,'Good progress; a fixed study schedule can help achieve a higher grade.'],
+ ['Strong academic record so far; advised to sustain consistency and target top ranks.',`Performance is commendable; ${n} encouraged to take up advanced topics and help peers.`,'Excellent results; keep the momentum and aim for university merit positions.']][t];
+ return [pick(res),
+ pick([`Discussed CA1 performance; ${n} to revisit weak topics and improve answer presentation.`,'CA1 reviewed; advised to start preparing early and solve more problems.','CA1 outcome discussed; regular class notes and timely doubt clearing recommended.',`Reviewed CA1 marks; ${n} assured to work on time management during tests.`]),
+ pick(['Progress is on track; advised to maintain at least 75% attendance and stay regular in labs.',`Discussed overall progress; ${n} to be more active in class and submit assignments on time.`,'Academic progress reviewed; advised to follow a weekly study plan and seek help early.',`Discussed attendance, assignments and study habits; ${n} to keep improving steadily.`]),
+ pick(['CA2 and PCA1 reviewed; advised to practise lab programs and revise theory regularly.',`Discussed CA2/PCA1 performance; ${n} to improve viva preparation and record writing.`,'CA2 and PCA1 outcome discussed; focus on weak units and hands-on practice suggested.','Reviewed CA2 and PCA1; encouraged to clear pending lab work and prepare short notes.']),
+ pick([`Advised to enrol in an NPTEL/SWAYAM course on ${it} and keep MAR points updated.`,`Encouraged to complete a MOOC related to ${it} and join technical clubs/events for MAR.`,`${n} to plan certifications in ${it2}; participation in hackathons/workshops suggested.`,`Discussed MAR progress; advised to take up projects and contests in ${it} and upload certificates.`]),
+ pick([`CA3 discussed; doubts clarified and ${n} advised to focus on pending topics before the final exam.`,'Reviewed CA3 performance; regular problem solving and doubt sessions recommended.',`CA3 outcome discussed; ${n} to revise earlier units alongside the new syllabus.`,'Doubts addressed; advised to improve consistency and attempt all questions in tests.']),
+ pick(['CA4 and PCA2 reviewed; advised to finish lab records and prepare well for practical viva.',`Discussed CA4/PCA2 results; ${n} to revise key concepts and practise previous year papers.`,'CA4 and PCA2 discussed; focus on weak areas and timed practice suggested.','Reviewed CA4 and PCA2; encouraged to complete all pending submissions and lab work.']),
+ pick(['Motivated to prepare systematically for semester and practical exams; wished all the best.',`${n} advised to stay calm, revise regularly and manage time well for the exams.`,'Encouraged to practise previous papers and stay healthy during exams; best wishes.',`Discussed exam strategy and practical preparation; ${n} motivated to give their best.`])];
+}
 function render(){
  const rows=['roll','reg','email','mobile','father','state','fmobile'];
  const blank=n=>n>=4?'<td></td>':'';
@@ -125,7 +151,8 @@ function render(){
 <tr><td class="l"></td><td class="l">Name of the Student</td><td><b>${v('name')}</b></td>${blank(3)}</tr>
 <tr><td class="l"></td><td class="l">University Roll</td><td>${v('roll')}</td>${blank(3)}</tr>
 <tr><td class="l" style="text-align:center">Date</td><td class="l">Activities</td>${blank(4)}</tr>`;
- acts.forEach(a=>{p2+=`<tr><td></td><td class="ac" style="height:42px">${a}</td>${blank(4)}</tr>`});
+ const RM=($('rem').checked&&$('name').value.trim())?remarks():[];
+ acts.forEach((a,i)=>{p2+=`<tr><td></td><td class="ac" style="height:42px">${a}</td><td class="rm">${esc(RM[i]||'')}</td></tr>`});
  p2+=`</table>${sig}</div>`;
  $('out').innerHTML=p1+p2;
 }
@@ -144,6 +171,8 @@ $('print').onclick=()=>{
  if(!validate()){const b=document.querySelector('.bad');if(b)b.scrollIntoView({block:'center'});return}
  render();setTimeout(()=>window.print(),100);
 };
+$('shuffle').onclick=()=>{seed++;render()};
+$('rem').addEventListener('change',render);
 $('reset').onclick=()=>{if(!confirm('Clear all entered details?'))return;ids.forEach(i=>{const el=$(i);el.value=el.tagName==='SELECT'?el.options[0].value:'';el.classList.remove('bad')});F.forEach(f=>$('e_'+f[0]).textContent='');S={};save();render()};
 render();
 </script>
